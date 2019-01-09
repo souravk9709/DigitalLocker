@@ -1,0 +1,362 @@
+swagger: '2.0'
+info:
+  version: '0.1.0'
+  title: D FROZEN SOFT PRIVATE LIMITED
+  description: A Digital Locker provides document storage and sharing system with trust and security of blockchain
+  termsOfService: http://www.dfrozensoft.com/terms
+basePath: /v0.1
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /health-check:
+    get:
+      description: Checks if the node is healthy
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: node is healthy
+          schema:
+            $ref: '#/definitions/Node'
+        '503':
+          description: node is down
+        default:
+          description: unexpected error
+  /user/{username}:
+    get:
+      description: Returns a user based on the username
+      produces:
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: username of user to fetch
+          required: true
+          type: string
+      responses:
+        '200':
+          description: created user
+          schema:
+            $ref: '#/definitions/User'
+        '400':
+          description: username is missing
+        '404':
+          description: user does not exist
+        default:
+          description: unexpected error
+  /user:
+    post:
+      description: Registers a new user. Duplicates are not allowed
+      produces:
+        - application/json
+      parameters:
+        - name: user
+          in: body
+          description: user to be registered (additional key-value pairs can be added which will be stored in metadata)
+          required: true
+          schema:
+            $ref: '#/definitions/NewUser'
+      responses:
+        '200':
+          description: user created
+        '400':
+          description: required parameters missing
+        '401':
+          description: invalid signature
+        '409':
+          description: username already exists
+        default:
+          description: unexpected error
+  /document/{id}:
+    get:
+      description: Returns a document based on the id
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of document to fetch
+          required: true
+          type: string
+      responses:
+        '200':
+          description: fetched document
+          schema:
+            $ref: '#/definitions/Document'
+        '400':
+          description: id missing
+        '404':
+          description: document does not exist
+        default:
+          description: unexpected error
+  /document/user/{username}:
+    get:
+      description: Returns all document summaries created by user with provided username
+      produces:
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: username of user
+          required: true
+          type: string
+      responses:
+        '200':
+          description: list of DocumentSummary
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DocumentSummary'
+        '400':
+          description: username missing
+        default:
+          description: unexpected error 
+  /document/shared/{username}:
+    get:
+      description: Returns all document summaries shared with a user with provided username
+      produces:
+        - application/json
+      parameters:
+        - name: username
+          in: path
+          description: username of user
+          required: true
+          type: string
+      responses:
+        '200':
+          description: list of DocumentSummary
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DocumentSummary'
+        '400':
+          description: username missing
+        default:
+          description: unexpected error
+  /document:
+    post:
+      description: Creates a new document
+      produces:
+        - application/json
+      parameters:
+        - name: document
+          in: body
+          description: document to be created
+          required: true
+          schema:
+            $ref: '#/definitions/NewDocument'
+      responses:
+        '200':
+          description: document created
+        '400':
+          description: required parameters missing
+        '401':
+          description: invalid signature
+        '413':
+          description: document too large
+        default:
+          description: unexpected error
+  /share:
+    post:
+      description: Share the document with other user
+      produces:
+        - application/json
+      parameters:
+        - name: ShareRequest
+          in: body
+          description: summary of the document to be shared
+          required: true
+          schema:
+            $ref: '#/definitions/ShareRequest'
+      responses:
+        '200':
+          description: document shared
+        '400':
+          description: required parameters missing
+        '401':
+          description: invalid signature
+        '404':
+          description: document not found
+        default:
+          description: unexpected error
+definitions:
+  User:
+    type: object
+    required:
+      - username
+      - name
+      - email
+      - public_key
+      - signature
+      - created_at
+    properties:
+      username:
+        type: string
+        description: Username
+      name:
+        type: string
+        description: User's name
+      email:
+        type: string
+        description: User's email
+      metadata:
+        type: object
+        description: Other information about user
+      public_key:
+        type: string
+        description: User's public key
+      signature:
+        type: string
+        description: User info signed with the user's private key
+      created_at:
+        type: integer
+        description: User's registration timestamp
+  NewUser:
+    type: object
+    required:
+      - username
+      - name
+      - email
+      - public_key
+      - signature
+    properties:
+      username:
+        type: string
+        description: Username
+      name:
+        type: string
+        description: User's name
+      email:
+        type: string
+        description: User's email
+      public_key:
+        type: string
+        description: User's public key
+      signature:
+        type: string
+        description: User info signed with the user's private key
+  Node:
+    type: object
+    properties:
+      version:
+        type: string
+        description: Multichain Version
+      protocol_version:
+        type: integer
+        description: Multichain protocol version
+      chain_name:
+        type: string
+        description: Chain name
+      description:
+        type: string
+        description: Chain description
+      protocol:
+        type: string
+        description: Multichain Protocol
+      port:
+        type: integer
+        description: Port for peer-to-peer connection
+  Document:
+    type: object
+    required:
+      - id
+      - name
+      - creator
+      - encrypted_content
+      - encrypted_key
+      - signature
+      - created_at
+    properties:
+      id:
+        type: string
+        description: Document's id. It is generated by taking SHA256 hash of a combination of document's name, creator's username and the encrypted content
+      name:
+        type: string
+        description: Document's name
+      creator:
+        type: string
+        description: Document creator's username
+      encrypted_content:
+        type: string
+        description: Encrypted form of a document by a symmetric key
+      encrypted_key:
+        type: string
+        description: Symmetric Key for decrypting document which in turn is encrypted by creator's public key
+      signature:
+        type: string
+        description: Document info signed with the creator's private key
+      created_at:
+        type: integer
+        description: Document creation timestamp
+  NewDocument:
+    type: object
+    required:
+      - name
+      - creator
+      - encrypted_content
+      - encrypted_key
+      - signature
+    properties:
+      name:
+        type: string
+        description: Document's name
+      creator:
+        type: string
+        description: Document creator's username
+      encrypted_content:
+        type: string
+        description: Encrypted form of a document by a symmetric key
+      encrypted_key:
+        type: string
+        description: Symmetric Key for decrypting document which in turn is encrypted by creator's public key
+      signature:
+        type: string
+        description: Document info signed with the creator's private key
+  DocumentSummary:
+    type: object
+    required:
+      - id
+      - name
+      - creator
+      - encrypted_key
+      - created_at
+    properties:
+      id:
+        type: string
+        description: Document's Id
+      name:
+        type: string
+        description: Document's Name
+      creator:
+        type: string
+        description: Document creator's username
+      encrypted_key:
+        type: string
+        description: Symmetric Key for decrypting document which in turn is encrypted by creator's public key
+      created_at:
+        type: integer
+        description: Document creation timestamp
+  ShareRequest:
+    type: object
+    required:
+      - to
+      - document_id
+      - encrypted_key
+      - signature
+    properties:
+      document_id:
+        type: string
+        description: Document's Id
+      to:
+        type: string
+        description: Username of the user to share the document with
+      encrypted_key:
+        type: string
+        description: Symmetric Key for decrypting document which in turn is encrypted by receiver's public key
+      signature:
+        type: string
+        description: Share info signed with the creator's private key

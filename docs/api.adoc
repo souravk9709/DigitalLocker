@@ -1,0 +1,449 @@
+= CryptoLocker
+D FROZEN SOFT PRIVATE LIMITED <dhanraj@dfrozensoft.com>
+v1.0, 2016-10-03
+
+
+[[_overview]]
+== Introduction
+CryptoLocker provides RESTful API to store and share any file on a blockchain network. The applications of such a system includes any use case that requires user privacy, authenticity and immutability. One such use case is health record storage.
+
+Following are the features that CryptoLocker provides as a part of its offering:
+
+* *Security*: Files are stored in an encrypted format so the control of who is able to view the data completely lies with the user. Even if the client interacts with the blockchain through a middleware (like an application server), the client can directly manage his/her private keys (thereby not compromising any security)
+
+* *Immutability*: Since the storage is on a blockchain network so the authenticity and immutability of the data is guaranteed. Once the data is stored, its origin and state is unchangable and can be easily traced down.
+
+* *Interoperability*: Based on the permissioning implemented in the blockchain network, it is very easy for new entities to join the network and access the already existing data without any complex setup process.
+
+* *Easy Integration*: Since CryptoLocker provides RESTful API, so it is very easy to integrate with existing backend systems and leverage the power of blockchain. Besides, these APIs also make it possible for mobile devices to directly connect to the blockchain network without any knowledge of its underlying working.
+
+<<<
+
+== Technical Details
+
+==== Blockchain
+CryptoLocker leverages Multichain as the underlying blockchain technology.
+
+==== Cryptography
+* CryptoLocker uses "*RSA public key - private key*" cryptography to manage user accounts as well as for user signature and validation.
+* CryptoLocker uses "*AES/CBC/PKCS5PADDING symmetric key*" cryptography to encrypt the files stored on the blockchain
+
+<<<
+
+[[_paths]]
+== APIs
+
+[[_health-check_get]]
+=== GET `/health-check`
+
+==== Description
+Checks if the node is healthy
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|node is healthy|<<_node,Node>>
+|*503*|node is down|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_user_post]]
+=== POST `/user`
+
+==== Description
+Registers a new user. Duplicates are not allowed
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Body*|*user* +
+_required_|user to be registered (additional key-value pairs can be added which will be stored in metadata)|<<_newuser,NewUser>>|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|user created|No Content
+|*400*|required parameters missing|No Content
+|*401*|invalid signature|No Content
+|*409*|username already exists|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_user_username_get]]
+=== GET `/user/{username}`
+
+==== Description
+Returns a user based on the username
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Path*|*username* +
+_required_|username of user to fetch|string|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|created user|<<_user,User>>
+|*400*|username is missing|No Content
+|*404*|user does not exist|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+
+[[_document_post]]
+=== POST `/document`
+
+==== Description
+Creates a new document
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Body*|*document* +
+_required_|document to be created|<<_newdocument,NewDocument>>|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|document created|No Content
+|*400*|required parameters missing|No Content
+|*401*|invalid signature|No Content
+|*413*|document too large|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_document_user_username_get]]
+=== GET `/document/user/{username}`
+
+==== Description
+Returns all document summaries created by user with provided username
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Path*|*username* +
+_required_|username of user|string|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|list of DocumentSummary|< <<_documentsummary,DocumentSummary>> > array
+|*400*|username missing|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_document_id_get]]
+=== GET `/document/{id}`
+
+==== Description
+Returns a document based on the id
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Path*|*id* +
+_required_|id of document to fetch|string|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|fetched document|<<_document,Document>>
+|*400*|id missing|No Content
+|*404*|document does not exist|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_share_post]]
+=== POST `/share`
+
+==== Description
+Share the document with other user
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Body*|*ShareRequest* +
+_required_|summary of the document to be shared|<<_sharerequest,ShareRequest>>|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|document shared|No Content
+|*400*|required parameters missing|No Content
+|*401*|invalid signature|No Content
+|*404*|document not found|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+[[_document_shared_username_get]]
+=== GET `/document/shared/{username}`
+
+==== Description
+Returns all document summaries shared with a user with provided username
+
+
+==== Parameters
+
+[options="header", cols=".^2,.^3,.^9,.^4,.^2"]
+|===
+|Type|Name|Description|Schema|Default
+|*Path*|*username* +
+_required_|username of user|string|
+|===
+
+
+==== Responses
+
+[options="header", cols=".^2,.^10,.^8"]
+|===
+|HTTP Code|Description|Schema
+|*200*|list of DocumentSummary|< <<_documentsummary,DocumentSummary>> > array
+|*400*|username missing|No Content
+|*default*|unexpected error|No Content
+|===
+
+
+==== Produces
+
+* `application/json`
+
+
+
+<<<
+
+
+[[_definitions]]
+== Definitions
+
+
+[[_node]]
+=== Node
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*chain_name* +
+_optional_|Chain name|string
+|*description* +
+_optional_|Chain description|string
+|*port* +
+_optional_|Port for peer-to-peer connection|integer
+|*protocol* +
+_optional_|Multichain Protocol|string
+|*protocol_version* +
+_optional_|Multichain protocol version|integer
+|*version* +
+_optional_|Multichain Version|string
+|===
+
+
+[[_newuser]]
+=== NewUser
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*email* +
+_required_|User's email|string
+|*name* +
+_required_|User's name|string
+|*public_key* +
+_required_|User's public key|string
+|*signature* +
+_required_|User info signed with the user's private key|string
+|*username* +
+_required_|Username|string
+|===
+
+
+[[_user]]
+=== User
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*created_at* +
+_required_|User's registration timestamp|integer
+|*email* +
+_required_|User's email|string
+|*metadata* +
+_optional_|Other information about user|object
+|*name* +
+_required_|User's name|string
+|*public_key* +
+_required_|User's public key|string
+|*signature* +
+_required_|User info signed with the user's private key|string
+|*username* +
+_required_|Username|string
+|===
+
+
+[[_document]]
+=== Document
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*created_at* +
+_required_|Document creation timestamp|integer
+|*creator* +
+_required_|Document creator's username|string
+|*encrypted_content* +
+_required_|Encrypted form of a document by a symmetric key|string
+|*encrypted_key* +
+_required_|Symmetric Key for decrypting document which in turn is encrypted by creator's public key|string
+|*id* +
+_required_|Document's id. It is generated by taking SHA256 hash of a combination of document's name, creator's username and the encrypted content|string
+|*name* +
+_required_|Document's name|string
+|*signature* +
+_required_|Document info signed with the creator's private key|string
+|===
+
+
+[[_documentsummary]]
+=== DocumentSummary
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*created_at* +
+_required_|Document creation timestamp|integer
+|*creator* +
+_required_|Document creator's username|string
+|*encrypted_key* +
+_required_|Symmetric Key for decrypting document which in turn is encrypted by creator's public key|string
+|*id* +
+_required_|Document's Id|string
+|*name* +
+_required_|Document's Name|string
+|===
+
+
+[[_newdocument]]
+=== NewDocument
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*creator* +
+_required_|Document creator's username|string
+|*encrypted_content* +
+_required_|Encrypted form of a document by a symmetric key|string
+|*encrypted_key* +
+_required_|Symmetric Key for decrypting document which in turn is encrypted by creator's public key|string
+|*name* +
+_required_|Document's name|string
+|*signature* +
+_required_|Document info signed with the creator's private key|string
+|===
+
+[[_sharerequest]]
+=== ShareRequest
+
+[options="header", cols=".^3,.^11,.^4"]
+|===
+|Name|Description|Schema
+|*document_id* +
+_required_|Document's Id|string
+|*encrypted_key* +
+_required_|Symmetric Key for decrypting document which in turn is encrypted by receiver's public key|string
+|*signature* +
+_required_|Share info signed with the creator's private key|string
+|*to* +
+_required_|Username of the user to share the document with|string
+|===
+
+
+
+
+
